@@ -12,15 +12,23 @@ class power_grid():
         self.Sb = Sb
         self.node_num = node_num
         self.admittance_matrix = \
-        np.array([[0 for ele in range(0,node_num)] for ele in range(0,node_num)],dtype=np.complex128)
+        np.array([[0 for ele in range(0,node_num)] for ele in range(0,node_num)],\
+            dtype=np.complex128)
         
-    def add_generator(self, device_name= None, **paraments):
+    def add_generator(self,loc,Sn,Xd_2,device_name= None,*args, **kw):
         para = Xd_2 * self.Sb/Sn
         self.add_device(loc, para, False)
-    def add_line(self,line_label= None,para):
-        
-    def add_transformer(self,device_name= None, para):
-        pass
+    def add_line(self,loc,voltage,x,length,line_label= None,*args, **kw):
+        Xb = voltage**2 / self.Sb
+        para = length * x / Xb
+        self.add_device(loc,para,False)
+        if 'b' in kw:
+            para = kw['b'] * length * 10**-6 * Xb / 2
+            self.add_device((loc[0],0),para,True)
+            self.add_device((loc[1],0),para,True)
+    def add_transformer(self,loc,Sn,Vs,device_name= None,*args, **kw):
+        para = Vs * self.Sb / Sn
+        self.add_device(loc,para,False)
     def add_device(self,loc,para, para_is_admittance = False):
         '''docstring
         pass
@@ -40,7 +48,8 @@ class power_grid():
             ind2 = self.node_num
             self.node_num += 1
             new_mat = \
-            np.array([[0 for ele in range(0,self.node_num)] for ele in range(0,self.node_num)],dtype=np.complex128)
+            np.array([[0 for ele in range(0,self.node_num)] \
+                for ele in range(0,self.node_num)],dtype=np.complex128)
             new_mat[:-1,:-1]=self.admittance_matrix[:,:]
             self.admittance_matrix = new_mat
             del new_mat
@@ -73,3 +82,14 @@ class power_grid():
     def add_devices(self, devices):
         for each in devices:
             self.add_device(self, each)
+
+if __name__=='__main__':
+    grid = power_grid(node_num= 5, Sb= 120)
+    grid.add_generator(loc=(1,0),Sn=120 ,Xd_2= 0.23)
+    grid.add_generator(loc=(2,0),Sn=60 ,Xd_2= 0.14)
+    grid.add_transformer(loc=(1,3),Sn= 120, Vs= 0.105)
+    grid.add_transformer(loc=(2,4),Sn= 60, Vs= 0.105)
+    grid.add_line(loc=(3,4),voltage=115, x= 0.4, b= 2.8, length= 120)
+    grid.add_line(loc=(3,5),voltage=115, x= 0.4, b= 2.8, length= 80)
+    grid.add_line(loc=(4,5),voltage=115, x= 0.4, b= 2.8, length= 70)
+    print(grid.admittance_matrix)
