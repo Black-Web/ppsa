@@ -64,7 +64,8 @@ class power_grid():
             增加连枝的情况
             '''
             if loc[0]==loc[1]:
-                raise ValueError('invalid edge:' +str(loc))
+                pass
+                # raise ValueError('invalid edge:' +str(loc))
             if 0 in loc:
                 ind = loc[0]-1
                 if ind < 0:
@@ -83,6 +84,7 @@ class power_grid():
         for each in devices:
             self.add_device(self, each)
 
+
 if __name__=='__main__':
     grid = power_grid(node_num= 5, Sb= 120)
     grid.add_generator(loc=(1,0),Sn=120 ,Xd_2= 0.23)
@@ -92,4 +94,9 @@ if __name__=='__main__':
     grid.add_line(loc=(3,4),voltage=115, x= 0.4, b= 2.8, length= 120)
     grid.add_line(loc=(3,5),voltage=115, x= 0.4, b= 2.8, length= 80)
     grid.add_line(loc=(4,5),voltage=115, x= 0.4, b= 2.8, length= 70)
-    print(grid.admittance_matrix)
+    print('初始导纳矩阵：\n',grid.admittance_matrix)
+    print('5结点短路的矩阵：\n',grid.admittance_matrix[:4,:4])
+    grid.add_line(loc=(4,5),voltage=115, x= 0.4, b= 2.8, length= -70)
+    grid.add_line(loc=(0,5),voltage=115, x= 0.4, b= 2.8, length= 35)
+    grid.add_line(loc=(4,0),voltage=115, x= 0.4, b= 2.8, length= 35)
+    print('L-3中点短路的矩阵：\n',grid.admittance_matrix)
