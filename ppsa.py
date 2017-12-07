@@ -19,8 +19,12 @@ class power_grid():
         self.load = self.admat_with_earth[0,1:]
     def impedance_matrix(self):
         return sp.linalg.inv(self.admat)
-    def nodes_voltage(self):
-        return np.dot(self.impedance_matrix(),self.source)
+    def nodes_voltage(self,node=None):
+        U = np.dot(self.impedance_matrix(),self.source)
+        if node:
+            return U[node]
+        else:
+            return U
     def add_device(self,loc,para, para_is_admittance = False):
         '''docstring
         basic function of the power_grid.
