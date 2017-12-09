@@ -18,9 +18,18 @@ class power_grid():
         self.source = self.admat_with_earth[1:,0]
         self.load = self.admat_with_earth[0,1:]
     def impedance_matrix(self):
-        return sp.linalg.inv(self.admat)
+        return np.linalg.inv(self.admat)
     def nodes_voltage(self,node=None):
-        U = np.dot(self.impedance_matrix(),self.source)
+        '''docstring
+        return the voltage of each node based on the current grid structure,
+        if parament node given,only return voltage at node
+        * parament:
+
+        node : legal numpy array index
+
+        * return:numpy array
+        '''
+        U = np.dot(self.impedance_matrix(),self.source+self.load)
         if node:
             return U[node]
         else:
@@ -105,6 +114,9 @@ class power_grid():
     def add_phase_modifier(self,loc,Sn,Xld_2,device_name= None,*args, **kw):
         pass
     def short_circuit(self,f):
+        '''docstring
+        return the subtransient voltage of each node after short circuit at node f
+        '''
         U = self.nodes_voltage()
         Z = self.impedance_matrix()[f-1]
         U -= U[f-1]*Z/Z[f-1]
