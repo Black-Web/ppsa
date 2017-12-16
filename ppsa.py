@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 '''
 python power system analysis
 '''
 import numpy as np
-import scipy as sp
-import matplotlib.pyplot as plt
-import networkx as nx
+#import scipy as sp
+#import matplotlib.pyplot as plt
+#import networkx as nx
 
 
 class power_grid():
@@ -27,7 +28,7 @@ class power_grid():
 
         node : legal numpy array index
 
-        * return:numpy array
+        * return:numpy array representing voltage at different node
         '''
         U = np.dot(self.impedance_matrix(),self.source+self.load)
         if node:
@@ -40,9 +41,9 @@ class power_grid():
         used by other functions that will change the grid's admittance matrix such as *add_transformer*,*add_generator*
         '''
         if para_is_admittance:
-            addup = para*1j
+            addup = para
         else: 
-            addup = 1/(para*1j)
+            addup = 1/para
         
         if not isinstance(loc,(tuple,list)):
             loc = loc,
@@ -92,14 +93,14 @@ class power_grid():
     def add_line(self,loc,voltage,x,length,line_label= None,*args, **kw):
         Xb = voltage**2 / self.Sb
         para = length * x / Xb
-        self.add_device(loc,para,False)
+        self.add_device(loc,para*1j,False)
         if 'b' in kw:
             para = kw['b'] * length * 10**-6 * Xb / 2
-            self.add_device((loc[0],0),para,True)
-            self.add_device((loc[1],0),para,True)
+            self.add_device((loc[0],0),para*1j,True)
+            self.add_device((loc[1],0),para*1j,True)
     def add_transformer(self,loc,Sn,Vs,device_name= None,*args, **kw):
         para = Vs * self.Sb / Sn
-        self.add_device(loc,para,False)
+        self.add_device(loc,para*1j,False)
     def add_load(self,loc,Sn,Xld_2,device_name= None,*args, **kw):
         para = Xld_2 * self.Sb/Sn
         ref_vol = 1
@@ -113,14 +114,15 @@ class power_grid():
             self.load[loc[1]-1] -= ref_vol/para
     def add_phase_modifier(self,loc,Sn,Xld_2,device_name= None,*args, **kw):
         pass
-    def short_circuit(self,f):
+    def short_circuit(self,f,Zf=0):
         '''docstring
         return the subtransient voltage of each node after short circuit at node f
         '''
-        U = self.nodes_voltage()
+        Uf = self.nodes_voltage()
         Z = self.impedance_matrix()[f-1]
-        U -= U[f-1]*Z/Z[f-1]
-        return U
+        If = Uf[f-1]/(Z[f-1]+Zf)
+        Uf -= Uf[f-1]*Z/Z[f-1]
+        return Uf,If
 class device(object):
     """docstring for device"""
     def __init__(self, arg):
