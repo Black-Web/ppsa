@@ -18,6 +18,12 @@ class power_grid():
         self.admat=self.admat_with_earth[1:,1:]
         self.source = self.admat_with_earth[1:,0]
         self.load = self.admat_with_earth[0,1:]
+    @property
+    def Y(self):
+        return self.admat_with_earth[1:,1:]
+    @property
+    def Z(self):
+        return self.impedance_matrix()
     def impedance_matrix(self):
         return np.linalg.inv(self.admat)
     def nodes_voltage(self,node=None):
@@ -128,8 +134,18 @@ class device(object):
     def __init__(self, arg):
         super(device, self).__init__()
         self.arg = arg
-        
-
+def impedance_of_line(length, x, voltage, Sb):
+    return length * x/(voltage**2 / Sb)
+def impedance_of_transformer(Vs, Sb, Sn):
+    return Vs * Sb / Sn
+def impedance_of_generator(Xd, Sb, Sn):
+    return Xd * Sb/Sn
+impedance_of_load = impedance_of_generator
+def current_distribution(admat,U):
+    U= np.array(U)
+    U= U.reshape((-1,1))-U.reshape((1,-1))
+    I = -U * admat
+    return I
 if __name__ == '__main__':
     grid = power_grid(node_num= 5, Sb= 120)
     grid.add_generator(loc=(1,0),Sn=120 ,Xd_2= 0.23)
@@ -140,3 +156,8 @@ if __name__ == '__main__':
     grid.add_line(loc=(3,5),voltage=115, x= 0.4, b= 2.8, length= 80)
     grid.add_line(loc=(4,5),voltage=115, x= 0.4, b= 2.8, length= 70)
     print('grid\'s admittance matrix:\n',grid.admat)
+    print('5结点短路：',grid.admat[:-1,:-1])
+    grid.add_line(loc=(4,5),voltage=115, x= 0.4, b= 2.8, length= -70)
+    grid.add_line(loc=(4,0),voltage=115, x= 0.4, b= 2.8, length= 35)
+    grid.add_line(loc=(0,5),voltage=115, x= 0.4, b= 2.8, length= 35)
+    print('L3中点短路：',grid.admat)
