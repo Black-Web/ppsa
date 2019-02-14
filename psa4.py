@@ -60,9 +60,10 @@ def update_voltage(source_node,current_edge,current_node):
         current_node = nodes[current_edge.user_node_index-1]
         update_voltage(source_node,current_edge,current_node)
 
-V = [each.voltage for each in nodes]
-S = [each.transfer_power for each in edges]
+iter_count = 0
 while True:
+    V = [each.voltage for each in nodes]
+    S = [each.transfer_power for each in edges]
     nodeiter = leaf_node.copy()
     current_node = nodeiter.pop()
     while True:
@@ -83,9 +84,12 @@ while True:
     update_voltage(source_node,current_edge,current_node)
     if max([abs(vn - vn_1) for vn,vn_1 in\
             zip([each.voltage for each in nodes], V)])>1e-6:
+        iter_count += 1
+        if iter_count > 50:print('该系统不收敛');break
+    else:
         V = [each.voltage for each in nodes]
         S = [each.transfer_power for each in edges]
-    else:break
+        break
 
 print('每个节点电压：\n',V)
 print('每条支路功率：\n',S)
